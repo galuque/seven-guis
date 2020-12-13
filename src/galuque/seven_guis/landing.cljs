@@ -1,10 +1,11 @@
 (ns galuque.seven-guis.landing
   (:require [reagent.dom :as rd]
-            ["@material-ui/core" :refer [Typography]]
-            [galuque.seven-guis.guis.counter :as counter]
-            [galuque.seven-guis.guis.temp-converter :as tc]
-            [galuque.seven-guis.guis.flight-booker :as fb]
-            [galuque.seven-guis.guis.timer :as t]))
+            ["@material-ui/core" :refer [Divider Typography]]
+            [galuque.seven-guis.guis.counter :refer [counter]]
+            [galuque.seven-guis.guis.temp-converter :refer [converter]]
+            [galuque.seven-guis.guis.flight-booker :refer [flight-booker]]
+            [galuque.seven-guis.guis.timer :refer [timer]]
+            [galuque.seven-guis.guis.CRUD :refer [CRUD]]))
 
 (def app-root (.getElementById js/document "app"))
 
@@ -12,18 +13,27 @@
   [:<>
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h3" :align :center} "7GUIs"]]
+   [:> Divider {:style {:margin-bottom "40px"}}]
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h5" :align :center :style {:margin-bottom "20px"}} "Counter"]
-    [counter/counter]]
+    [counter]]
+   [:> Divider {:style {:margin-bottom "40px"}}]
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h5" :align :center :style {:margin-bottom "20px"}} "Temperature Converter"]
-    [tc/converter]]
+    [converter]]
+   [:> Divider {:style {:margin-bottom "40px"}}]
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h5" :align :center :style {:margin-bottom "20px"}} "Flight Booker"]
-    [fb/flight-booker]]
+    [flight-booker]]
+   [:> Divider {:style {:margin-bottom "40px"}}]
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h5" :align :center :style {:margin-bottom "20px"}} "Timer"]
-    [t/timer]]])
+    [timer]]
+   [:> Divider {:style {:margin-bottom "40px"}}]
+   [:div {:style {:margin-bottom "40px"}}
+    [:> Typography {:variant "h5" :align :center :style {:margin-bottom "20px"}} "CRUD"]
+    [CRUD]]
+   [:> Divider {:style {:margin-bottom "40px"}}]])
 
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
