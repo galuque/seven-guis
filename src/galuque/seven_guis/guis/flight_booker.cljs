@@ -16,7 +16,7 @@
                                      (h/date-map->default-date))}))
 
 (defn flight-booker []
-  [:> Grid {:container true :align-items :center :justify :center :direction "column"}
+  [:> Grid {:container true :align-items :center :justify :center :direction :column}
    [:> TextField {:select true :default-value :one-way-flight}
     [:> MenuItem {:value :one-way-flight
                   :on-click #(swap! state update-in [:one-way?] not)}
@@ -25,19 +25,19 @@
                   :on-click #(swap! state update-in [:one-way?] not)}
      "return flight"]]
    [:> TextField {:id :depart
-                  :type "date"
+                  :type :date
                   :default-value (:today @state)
                   :on-change #(do
                                 (swap! state assoc :depart (new js/Date (.. % -target -value)))
                                 (swap! state assoc :valid-depart? (h/is-valid-depart? @state)))}]
    [:> TextField {:id :return
-                  :type "date"
+                  :type :date
                   :default-value (:today @state)
                   :disabled (:one-way? @state)
                   :on-change #(do
                                 (swap! state assoc :return (new js/Date  (.. % -target -value)))
                                 (swap! state assoc :valid-return? (h/is-valid-return? @state)))}]
-   [:> Button {:variant "outlined"
+   [:> Button {:variant :outlined
                :disabled (or (not (:valid-return? @state))
                              (not (:valid-depart? @state)))
                :on-click #(js/alert (h/booked-message @state))}
