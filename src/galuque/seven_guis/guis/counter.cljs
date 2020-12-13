@@ -7,6 +7,6 @@
 (defn counter []
    [:> Container {:align :center}
     [:p @click-count ]
-    [:> Button {:variant "outlined"
+    [:> Button {:variant :outlined
                 :on-click #(swap! click-count inc)}
      "Count"]])
