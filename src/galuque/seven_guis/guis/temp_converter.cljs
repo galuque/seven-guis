@@ -7,7 +7,7 @@
 (defonce farenheit (r/atom (h/C->F @celsius)))
 
 (defn converter []
-   [:> Grid {:container true :align-items "center" :justify "center"}
+   [:> Grid {:container true :align-items :center :justify :center}
     [:> TextField {:label "Celsius"
                    :value @celsius
                    :on-change #(do
