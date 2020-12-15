@@ -21,18 +21,16 @@
 
 ;; Flight Booker helpers (better to just use cljs-time)
 
+(defn is-valid-depart?
+  [state]
+  (let [today  (new js/Date (:today state))
+        depart (:depart state)]
+    (<= today depart)))
+
 (defn is-valid-return?
   [state]
   (let [{:keys [depart return]} state]
-    (if (< depart return)
-      true
-      false)))
-
-(defn is-valid-depart?
-  [state]
-  (if (>= (new js/Date) (:depart state))
-    false
-    true))
+    (<= depart return)))
 
 (defn date->map
   [date]
