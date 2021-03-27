@@ -1,9 +1,4 @@
-;; shadow-cljs configuration
-{:source-paths
- ["src"]
-
- :dependencies
- [[reagent "1.0.0-rc1"]]
+{:deps true
 
  :builds
  {:guis {:target :browser
