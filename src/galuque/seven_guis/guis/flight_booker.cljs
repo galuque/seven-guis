@@ -1,60 +1,78 @@
 (ns galuque.seven-guis.guis.flight-booker
-  (:require [reagent.core :as r]
-            ["@material-ui/core" :refer [Button 
+  (:require ["@material-ui/core" :refer [Button 
                                          Grid 
                                          MenuItem 
                                          TextField]]
-            [galuque.seven-guis.base.helpers :as h]))
+            [cljs.core.async :as async]
+            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id]]
+            [reagent.core :as r])
+  (:import [goog.events EventType]))
 
-(defonce state (r/atom {:depart (new js/Date)
-                        :return (new js/Date)
+(def styles {:grid {:container true :align-items :center :justify :center :direction :column}
+
+             :flight-type {:id :input-select :name :input-select :class "MuiInputBase-root MuiInput-root MuiInput-underline MuiInputBase-formControl MuiInput-formControl"}
+             
+             :option {:class "MuiSelect-root MuiSelect-select MuiSelect-selectMenu MuiInputBase-input MuiInput-input"}})
+
+(defonce state (r/atom {:depart (js/Date.)
+                        :return (js/Date.)
                         :one-way? true
-                        :valid-return? true
-                        :valid-depart? true
-                        :today (-> (new js/Date)
-                                     (h/date->map)
-                                     (h/date-map->default-date))}))
+                        :valid-return? false
+                        :valid-depart? false}))
+
+(defn coordinate []
+  (let [toggle-flight-type  (events->chan (by-id "input-select") EventType.CHANGE)
+        depart-change       (events->chan (by-id "depart")       EventType.CHANGE)
+        return-change       (events->chan (by-id "return")       EventType.CHANGE)
+        book-click          (events->chan (by-id "book-button")  EventType.CLICK)]
+    (async/go-loop []
+      (async/alt!
+        toggle-flight-type
+        ([_] (swap! state update-in [:one-way?] not) (recur))
+
+        depart-change
+        ([e]
+         (swap! state assoc :depart (js/Date. (.. e -target -value)))
+         (swap! state assoc :valid-depart? (h/valid-depart? @state))
+         (swap! state assoc :valid-return? (h/valid-return? @state))
+         (recur))
+
+        return-change
+        ([e]
+         (swap! state assoc :return (js/Date.  (.. e -target -value)))
+         (swap! state assoc :valid-return? (h/valid-return? @state))
+         (recur))
+
+        book-click
+        ([_] (js/alert (h/booked-message @state)) (recur))))))
 
 (defn flight-booker []
-  (let [toggle-flight-type   #(swap! state update-in [:one-way?] not)
+  (r/create-class
+   {:display-name "Flight Booker"
 
-        handle-depart-change #(do
-                                (swap! state assoc :depart (new js/Date (.. % -target -value)))
-                                (swap! state assoc :valid-depart? (h/is-valid-depart? @state)))
+    :component-did-mount
+    (fn [] (coordinate))
 
-        handle-return-change #(do
-                                (swap! state assoc :return (new js/Date  (.. % -target -value)))
-                                (swap! state assoc :valid-return? (h/is-valid-return? @state)))
-
-        handle-booked-click  #(js/alert (h/booked-message @state))
-
-        button-disabled?      (not (and (:valid-depart? @state) 
-                                        (:valid-return? @state)))]
-    
-    [:> Grid {:container true :align-items :center :justify :center :direction :column}
-     [:> TextField {:select true :default-value :one-way-flight}
-      [:> MenuItem {:value :one-way-flight
-                    :on-click toggle-flight-type}
-       "one-way flight"]
-      [:> MenuItem {:value :return-flight
-                    :on-click toggle-flight-type}
-       "return flight"]]
-     [:> TextField {:id :depart
-                    :type :date
-                    :default-value (:today @state)
-                    :on-change handle-depart-change}]
-     [:> TextField {:id :return
-                    :type :date
-                    :default-value (:today @state)
-                    :disabled (:one-way? @state)
-                    :on-change handle-return-change}]
-     [:> Button {:variant :outlined
-                 :disabled button-disabled?
-                 :on-click handle-booked-click}
-      "book"]]))
+    :reagent-render
+    (fn []
+      (let [button-disabled? (not (or (and (:one-way? @state) (:valid-depart? @state))
+                                      (and (:valid-depart? @state) (:valid-return? @state))))]
+        [:> Grid (:grid styles)
+         [:select  (:flight-type styles)
+          [:option (merge (:option styles) {:value :one-way-flight}) "one-way flight"]
+          [:option (merge (:option styles) {:value :return-flight}) "return flight"]]
+         [:> TextField {:id :depart
+                        :type :date
+                        :default-value (-> (js/Date.) (h/date->map) (h/date-map->default-date))}]
+         [:> TextField {:id :return
+                        :type :date
+                        :disabled (:one-way? @state)}]
+         [:> Button {:id :book-button
+                     :variant :outlined
+                     :disabled button-disabled?}
+          "book"]]))}))
 
 (comment
-  (<= (new js/Date) (:depart @state))
   (h/is-valid-depart? @state)
-  (<= (new js/Date (:today @state)) (:depart @state))
-  (> 19 18 17))
+  (<= (js/Date.) (:depart @state)) ;; BUG: js/Date. returns UTC time, after 10 pm ART it breaks
+  ) 

@@ -1,8 +1,41 @@
 (ns galuque.seven-guis.base.helpers
-  (:require [goog.string :as gstring]
+  (:require [cljs.core.async :as async :refer [chan close! put!]]
+            [goog.events :as events]
+            [goog.string :as gstring]
             [goog.string.format]))
 
-;; counter helpers
+;; General helpers
+
+(defn <<< [f & args]
+  """
+  Automatically adds a callback to a parameter list
+  
+  (go
+    (js/console.log (<! (<<< search-google \"unicorn droppings\"))))
+  """
+  (let [c (chan)]
+    (apply f (concat args [(fn [x]
+                             (if (nil? x)
+                               (close! c)
+                               (put! c x)))]))
+    c))
+
+(defn by-id
+  "Short-hand for document.getElementById(id)"
+  [id]
+  (.getElementById js/document id))
+
+(defn events->chan
+  "Given a target DOM element and event type return a channel of
+  observed events. Can supply the channel to receive events as third
+  optional argument."
+  ([el event-type] (events->chan el event-type (chan)))
+  ([el event-type c]
+   (events/listen el event-type
+                  (fn [e] (put! c e)))
+   c))
+
+;; temp converter helpers
 
 (defn C->F
   [temp]
@@ -15,54 +48,50 @@
 (defn only-digits
   [event]
   (let [code (.-code event)]
-    (when (and (not (re-matches #"Digit.*"  code))
-               (not (re-matches #"Numpad.*" code)))
+    ;; BUG: Can't write negative numbers
+    (when-not (or (re-matches #"Digit.*"  code)
+                  (re-matches #"Numpad.*" code))
       (.preventDefault event))))
 
 ;; Flight Booker helpers (better to just use cljs-time)
 
-(defn is-valid-depart?
-  [state]
-  (let [today  (new js/Date (:today state))
-        depart (:depart state)]
+(defn valid-depart?
+  [{:keys [depart]}]
+  (let [today  (js/Date.)]
     (<= today depart)))
 
-(defn is-valid-return?
-  [state]
-  (let [{:keys [depart return]} state]
-    (<= depart return)))
+(defn valid-return?
+  [{:keys [depart return]}]
+  (<= depart return))
 
 (defn date->map
   [date]
   (let [month (.getUTCMonth    date)
         day   (.getUTCDate     date)
         year  (.getUTCFullYear date)]
-    {:month (+ month 1)
+    {:month (if (< month 9)
+              (str "0" (inc month))
+              (str (inc month)))
      :day   (if (< (js/parseInt day) 10)
               (str "0" day)
               day)
      :year  year}))
 
 (defn date-map->default-date
-  [date-map]
-  (let [{:keys [month day year]} date-map]
-    (str  year "-" month "-" day)))
+  [{:keys [month day year]}]
+  (str  year "-" month "-" day))
 
 (defn date-map->print-date
-  [date-map]
-  (let [{:keys [month day year]} date-map]
-    (str month "/" day "/" year)))
+  [{:keys [month day year]}]
+  (str month "/" day "/" year))
 
 (defn booked-message
-  [state]
-  (let [{:keys [depart return one-way?]} state]
-    (if one-way?
-      (str "You have booked a one-way flight for " (date-map->print-date (date->map depart)))
-      (str "You have booked a return flight from " (date-map->print-date (date->map depart)) " to " (date-map->print-date (date->map return))))))
+  [{:keys [depart return one-way?]}]
+  (if one-way?
+    (str "You have booked a one-way flight for " (date-map->print-date (date->map depart)))
+    (str "You have booked a return flight from " (date-map->print-date (date->map depart)) " to " (date-map->print-date (date->map return)))))
 
-
-;; timer helpers
-
+;; timer helper
 (defn update-elapsed!
   [state]
   (let [dt (- (. js/Date now)

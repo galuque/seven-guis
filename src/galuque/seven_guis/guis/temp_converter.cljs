@@ -20,4 +20,3 @@
                                  (reset! farenheit (.. % -target -value))
                                  (reset! celsius (Math/floor (h/F->C @farenheit))))
                    :on-key-press #(h/only-digits %)}]])
-

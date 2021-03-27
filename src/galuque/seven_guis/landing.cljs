@@ -1,5 +1,5 @@
 (ns galuque.seven-guis.landing
-  (:require [reagent.dom :as rd]
+  (:require [reagent.dom :as rdom]
             ["@material-ui/core" :refer [Divider Typography]]
             [galuque.seven-guis.guis.counter :refer [counter]]
             [galuque.seven-guis.guis.temp-converter :refer [converter]]
@@ -10,7 +10,7 @@
 (def app-root (.getElementById js/document "app"))
 
 (defn main []
-  [:<>
+  [:<> 
    [:div {:style {:margin-bottom "40px"}}
     [:> Typography {:variant "h3" :align :center} "7GUIs"]]
    [:> Divider {:style {:margin-bottom "40px"}}]
@@ -38,7 +38,7 @@
 ;; start is called by init and after code reloading finishes
 (defn ^:dev/after-load start []
   (js/console.log "start")
-  (rd/render [main] app-root))
+  (rdom/render [main] app-root))
 
 (defn ^:export init []
   ;; init is called ONCE when the page loads
