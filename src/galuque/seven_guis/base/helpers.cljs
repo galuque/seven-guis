@@ -1,6 +1,8 @@
 (ns galuque.seven-guis.base.helpers
   (:require [cljs.core.async :as async :refer [chan close! put!]]
+            [clojure.string :as str]
             [goog.events :as events]
+            [goog.date :as date]
             [goog.string :as gstring]
             [goog.string.format]))
 
@@ -55,41 +57,28 @@
 
 ;; Flight Booker helpers (better to just use cljs-time)
 
-(defn valid-depart?
-  [{:keys [depart]}]
-  (let [today  (js/Date.)]
-    (<= today depart)))
+(defn valid-depart? [{:keys [depart]}]
+  (let [today (date/Date.)]
+    (<= 0 (.compare date/Date today depart))))
 
-(defn valid-return?
-  [{:keys [depart return]}]
-  (<= depart return))
+(defn valid-return? [{:keys [depart return]}]
+  (<= 0 (.compare date/Date depart return)))
 
-(defn date->map
-  [date]
-  (let [month (.getUTCMonth    date)
-        day   (.getUTCDate     date)
-        year  (.getUTCFullYear date)]
-    {:month (if (< month 9)
-              (str "0" (inc month))
-              (str (inc month)))
-     :day   (if (< (js/parseInt day) 10)
-              (str "0" day)
-              day)
-     :year  year}))
-
-(defn date-map->default-date
-  [{:keys [month day year]}]
-  (str  year "-" month "-" day))
-
-(defn date-map->print-date
-  [{:keys [month day year]}]
-  (str month "/" day "/" year))
+(defn ->date-str 
+  [date sep]
+  (let [date'    (.toString date)
+        year     (str/join (take 4 date'))
+        month    (str/join (take 2 (drop 4 date')))
+        day      (str/join (take 2 (drop 6 date')))]
+    (str year sep month sep day)))
 
 (defn booked-message
   [{:keys [depart return one-way?]}]
-  (if one-way?
-    (str "You have booked a one-way flight for " (date-map->print-date (date->map depart)))
-    (str "You have booked a return flight from " (date-map->print-date (date->map depart)) " to " (date-map->print-date (date->map return)))))
+  (let [depart' (->date-str depart "/")
+        return' (->date-str return "/")]
+    (if one-way?
+      (str "You have booked a one-way flight for " depart')
+      (str "You have booked a return flight from " depart' " to " return'))))
 
 ;; timer helper
 (defn update-elapsed!
