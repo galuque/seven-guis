@@ -27,7 +27,6 @@
 
         depart-change
         ([e]
-         (println (.. e -target -value))
          (swap! state assoc :depart (date/Date. (.. e -target -value)))
          (swap! state assoc :valid-depart? (h/valid-depart? @state))
          (recur))
@@ -55,7 +54,8 @@
 
       :reagent-render
       (fn []
-        (let [button-disabled? (not (or (and (:one-way? @state) (:valid-depart? @state))
+        (let [default-date     (-> (date/Date.) (h/->date-str "-"))
+              button-disabled? (not (or (and (:one-way? @state) (:valid-depart? @state))
                                         (and (:valid-depart? @state) (:valid-return? @state))))]
           [:> Grid (:grid styles)
            [:select  (:flight-type styles)
@@ -65,11 +65,11 @@
              "return flight"]]
            [:> TextField {:id :depart-date
                           :type :date
-                          :default-value (-> (date/Date.) (h/->date-str "-"))}]
+                          :default-value default-date}]
            [:> TextField {:id :return-date
                           :type :date
                           :disabled (:one-way? @state)
-                          :default-value (-> (date/Date.) (h/->date-str "-"))}]
+                          :default-value default-date}]
            [:> Button {:id :book-button
                        :variant :outlined
                        :disabled button-disabled?}

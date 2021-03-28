@@ -49,10 +49,8 @@
 
 (defn only-digits
   [event]
-  (let [code (.-code event)]
-    ;; BUG: Can't write negative numbers
-    (when-not (or (re-matches #"Digit.*"  code)
-                  (re-matches #"Numpad.*" code))
+  (let [ch (.fromCharCode js/String (.-which event))]
+    (when-not (re-matches #"[0-9|-]" ch)
       (.preventDefault event))))
 
 ;; Flight Booker helpers (better to just use cljs-time)
@@ -66,10 +64,11 @@
 
 (defn ->date-str 
   [date sep]
-  (let [date'    (.toString date)
-        year     (str/join (take 4 date'))
-        month    (str/join (take 2 (drop 4 date')))
-        day      (str/join (take 2 (drop 6 date')))]
+  (let [year     (.getYear date)
+        month'   (inc (.getMonth date))
+        month    (if (< month' 10) (str "0" month') month')
+        day'     (.getDate date)
+        day      (if (< day' 10) (str "0" day') day')]
     (str year sep month sep day)))
 
 (defn booked-message
