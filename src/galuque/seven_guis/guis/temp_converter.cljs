@@ -1,22 +1,60 @@
 (ns galuque.seven-guis.guis.temp-converter
-  (:require [reagent.core :as r]
-            ["@material-ui/core" :refer [Grid TextField]]
-            [galuque.seven-guis.base.helpers :as h]))
+  (:require ["@material-ui/core" :refer [Grid TextField]]
+            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id]]
+            [reagent.core :as r]
+            [cljs.core.async :as async])
+  (:import [goog.events EventType]))
 
-(defonce celsius (r/atom 0))
-(defonce farenheit (r/atom (h/C->F @celsius)))
+(def styles {:grid {:container true :align-items :center :justify :center}
+             
+             :celsius {:label "Celsius"
+                       :id :celsius-input
+                       :InputLabelProps {:shrink true}
+                       :default-value "0"}
+             
+             :farenheit {:label "Farenheit"
+                         :id :farenheit-input
+                         :InputLabelProps {:shrink true}
+                         :default-value "32"}})
+
+(defn coordinate! []
+  (let [celsius-el      (by-id "celsius-input")
+        farenheit-el    (by-id "farenheit-input")
+        celsius-input   (events->chan celsius-el   EventType.INPUT)
+        farenheit-input (events->chan farenheit-el EventType.INPUT)
+        update-elems!   (fn [e this-el other-el convert-fn]
+                          (let [value     (js/parseFloat (.. e -target -value))
+                                update?   (int? value)
+                                other-val (str (Math/round (convert-fn value)))]
+                            (if update?
+                              (do
+                                (set! (.-value other-el) other-val)
+                                (set! (.-backgroundColor (.-style other-el)) "")
+                                (set! (.-backgroundColor (.-style this-el))  ""))
+                              (do
+                                (set! (.-backgroundColor (.-style other-el)) "gray")
+                                (set! (.-backgroundColor (.-style this-el))  "coral")))))]
+    (async/go-loop []
+      (async/alt!
+        celsius-input
+        ([e]
+         (update-elems! e celsius-el farenheit-el h/C->F)
+         (recur))
+
+        farenheit-input
+        ([e]
+         (update-elems! e farenheit-el celsius-el h/F->C)
+         (recur))))))
 
 (defn converter []
-   [:> Grid {:container true :align-items :center :justify :center}
-    [:> TextField {:label "Celsius"
-                   :value @celsius
-                   :on-change #(do
-                                 (reset! celsius (.. % -target -value))
-                                 (reset! farenheit (Math/ceil (h/C->F @celsius))))
-                   :on-key-press #(h/only-digits %)}]
-    [:> TextField {:label "Farenheit"
-                   :value @farenheit
-                   :on-change #(do
-                                 (reset! farenheit (.. % -target -value))
-                                 (reset! celsius (Math/floor (h/F->C @farenheit))))
-                   :on-key-press #(h/only-digits %)}]])
+  (r/create-class
+   {:display-name "Temperature Converter"
+
+    :component-did-mount
+    (fn [] (coordinate!))
+
+    :reagent-render
+    (fn []
+      [:> Grid (:grid styles)
+       [:> TextField (:celsius styles)]
+       [:> TextField (:farenheit styles)]])}))
