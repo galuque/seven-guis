@@ -37,6 +37,9 @@
                   (fn [e] (put! c e)))
    c))
 
+(defn log [& args]
+  (.log js/console args))
+
 ;; temp converter helpers
 
 (defn C->F
@@ -47,20 +50,14 @@
   [temp]
   (* (- temp 32) (/ 5 9)))
 
-(defn only-digits
-  [event]
-  (let [ch (.fromCharCode js/String (.-which event))]
-    (when-not (re-matches #"[0-9|-]" ch)
-      (.preventDefault event))))
-
 ;; Flight Booker helpers (better to just use cljs-time)
 
 (defn valid-depart? [{:keys [depart]}]
   (let [today (date/Date.)]
-    (<= 0 (.compare date/Date today depart))))
+    (<= (.compare date/Date today depart) 0)))
 
 (defn valid-return? [{:keys [depart return]}]
-  (<= 0 (.compare date/Date depart return)))
+  (<= (.compare date/Date depart return) 0))
 
 (defn ->date-str 
   [date sep]
