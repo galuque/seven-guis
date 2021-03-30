@@ -1,6 +1,6 @@
 (ns galuque.seven-guis.guis.temp-converter
   (:require ["@material-ui/core" :refer [Grid TextField]]
-            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id]]
+            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id C->F F->C]]
             [reagent.core :as r]
             [cljs.core.async :as async])
   (:import [goog.events EventType]))
@@ -38,13 +38,12 @@
       (async/alt!
         celsius-input
         ([e]
-         (update-elems! e celsius-el farenheit-el h/C->F)
-         (recur))
+         (update-elems! e celsius-el farenheit-el C->F))
 
         farenheit-input
         ([e]
-         (update-elems! e farenheit-el celsius-el h/F->C)
-         (recur))))))
+         (update-elems! e farenheit-el celsius-el F->C)))
+      (recur))))
 
 (defn converter []
   (r/create-class
