@@ -1,39 +1,35 @@
 (ns galuque.seven-guis.guis.timer
   (:require [reagent.core :as r]
-            ["@material-ui/core" :refer [Button 
-                                         Container 
-                                         LinearProgress 
+            ["@material-ui/core" :refer [Button
+                                         Container
+                                         LinearProgress
                                          Slider]]
-            [galuque.seven-guis.base.helpers :as h]))
-
-(defonce state (r/atom {:start (.now js/Date)
-                        :duration 50
-                        :elapsed  0}))
+            [galuque.seven-guis.base.helpers :as h :refer [now]]))
 
 (defn timer []
-  (let [secs                   (h/display-elapsed @state)
-        
-        prog                   (h/progress @state)
-        
-        final-elapsed          (h/display-final-time @state)
-        
-        elapsed-display        (if (<= prog 100) secs final-elapsed)
-        
-        prog-display           (if (<= prog 100) prog 100)
-        
+  (let [state                  (r/atom {:start (now)
+                                        :duration 50
+                                        :elapsed  0})
+
+        secs                   (h/elapsed-secs @state)
+
+        progress               (h/progress @state)
+
+        limit                  (h/time-limit @state)
+
+        elapsed                (if (< progress 100) secs limit)
+
         handle-durarion-change (fn [_ val]
                                  (swap! state assoc :duration val))
-        
-        handle-reset         #(do
-                                (swap! state assoc :elapsed 0)
-                                (swap! state assoc :start (.now js/Date))) ]
+
+        handle-reset           (fn []
+                                 (swap! state assoc :elapsed 0 :start (now)))]
     
     (r/with-let [tick! (js/setInterval h/update-elapsed! 100 state)]
-
       [:> Container {:max-width :xs}
-       [:div "Elapsed Time: " elapsed-display " s"]
+       [:div "Elapsed Time: " elapsed " s"]
        [:> LinearProgress {:variant :determinate
-                           :value prog-display}]
+                           :value progress}]
        [:div {:style {:margin-bottom :20px}}]
        [:div "Duration"]
        [:> Slider {:value (:duration @state)
@@ -41,5 +37,5 @@
        [:> Button {:variant :outlined
                    :on-click handle-reset}
         "Reset Timer"]]
-                
+
       (finally (js/clearInterval tick!)))))
