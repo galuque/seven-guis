@@ -52,9 +52,12 @@
 
 ;; Flight Booker helpers (better to just use cljs-time)
 
-(defn valid-depart? [{:keys [depart]}]
-  (let [today (date/Date.)]
-    (<= (.compare date/Date today depart) 0)))
+(defn date<= 
+  "Compares start date and end date
+   returns true if start date if less or equeal to end date
+   otherwhise returns false"
+  [start end]
+  (<= (.compare date/Date start end) 0))
 
 (defn valid-return? [{:keys [depart return]}]
   (<= (.compare date/Date depart return) 0))
