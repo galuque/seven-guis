@@ -4,7 +4,7 @@
                                          MenuItem
                                          TextField]]
             [cljs.core.async :as async]
-            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id log]]
+            [galuque.seven-guis.base.helpers :as h :refer [events->chan by-id]]
             [goog.date :as date]
             [reagent.core :as r])
   (:import [goog.events EventType]))
@@ -25,24 +25,25 @@
     (async/go-loop []
       (async/alt!
         toggle-flight-type
-        ([_] (swap! state update-in [:one-way?] not) (recur))
+        ([_] (swap! state update-in [:one-way?] not))
 
         depart-change
         ([e]
-         (let [value (.. e -target -value)]
-           (swap! state assoc :depart (str->date value))
-           (swap! state assoc :valid-depart? (h/valid-depart? @state))
-           (recur)))
+         (let [depart        (str->date (.. e -target -value))
+               today         (date/Date.)
+               valid-depart? (h/date<= today depart)]
+           (swap! state assoc :depart depart :valid-depart? valid-depart?)))
 
         return-change
         ([e]
-         (let [value (.. e -target -value)]
-           (swap! state assoc :return (str->date value))
-           (swap! state assoc :valid-return? (h/valid-return? @state))
-           (recur)))
+         (let [return        (str->date (.. e -target -value))
+               depart        (:depart @state)
+               valid-return? (h/date<= depart return)]
+           (swap! state assoc :return return :valid-return? valid-return?)))
 
         book-click
-        ([_] (js/alert (h/booked-message @state)) (recur))))))
+        ([_] (js/alert (h/booked-message @state))))
+      (recur))))
 
 (defn flight-booker []
   (let [state (r/atom {:depart (date/Date.)
@@ -58,7 +59,7 @@
 
       :reagent-render
       (fn []
-        (let [default-value    (-> (date/Date.) (h/->date-str "-"))
+        (let [default-value    (-> (date/Date.) (h/date->iso-str))
               button-disabled? (not (or (and (:valid-depart? @state) (:one-way? @state))
                                         (and (:valid-depart? @state) (:valid-return? @state))))]
           [:> Grid (:grid styles)
