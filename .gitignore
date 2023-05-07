@@ -1,5 +1,6 @@
 node_modules/
 public/js
+portfolio/public/css/styles.css
 
 /target
 /checkouts
@@ -20,6 +21,7 @@ pom.xml.asc
 .clj-kondo
 .lsp
 .cpcache
+.portal
 
 .hgignore
 .hg/

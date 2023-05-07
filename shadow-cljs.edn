@@ -1,4 +1,10 @@
 {:deps true
+ 
+ :nrepl
+ {:port 55555}
+
+ :dev-http 
+ {9090 ["classpath:public" "public"]}
 
  :builds
  {:guis {:target :browser
@@ -7,8 +13,9 @@
 
          :modules
          {:main
-          {:init-fn galuque.seven-guis.landing/init}}
-
-         :devtools
-         {:http-root "public"
-          :http-port 9014}}}}
+          {:init-fn galuque.seven-guis.landing/init}}}
+  
+  :portfolio {:target :browser
+              :modules
+              {:main
+               {:init-fn galuque.seven-guis.portfolio/init}}}}}

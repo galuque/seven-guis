@@ -1,8 +1,26 @@
 {
   "dependencies": {
-    "@material-ui/core": "^4.11.1",
-    "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "cross-env": "^7.0.3",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.23",
+    "postcss-cli": "^10.1.0",
+    "tailwindcss": "^3.3.2"
+  },
+  "scripts": {
+    "app:watch": "clojure -M:watch",
+    "app:release": "clojure -M:release",
+    "css:build": "cross-env postcss src/css/styles.css -o public/css/styles.css --verbose",
+    "css:watch": "cross-env postcss src/css/styles.css -o public/css/styles.css --verbose -w",
+    "css:release": "cross-env NODE_ENV=production postcss src/css/styles.css -o public/css/styles.css --verbose --minify",
+    "app:portfolio": "clojure -M:portfolio",
+    "css:portfolio": "cross-env postcss src/css/styles.css -o portfolio/public/css/styles.css --verbose -w",
+    "portfolio": "npm-run-all -p app:portfolio css:portfolio",
+    "dev": "npm-run-all -p app:watch css:watch",
+    "release": "npm-run-all -p app:release css:release"
+  }
 }
